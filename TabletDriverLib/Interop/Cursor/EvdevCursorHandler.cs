@@ -8,6 +8,7 @@ namespace TabletDriverLib.Interop.Cursor
 {
     public class EvdevCursorHandler : ICursorHandler, IDisposable
     {
+        private bool isPenTouch;
         public unsafe EvdevCursorHandler()
         {
             Device = new EvdevDevice("OpenTabletDriver Virtual Pointer");
@@ -28,13 +29,22 @@ namespace TabletDriverLib.Interop.Cursor
             input_absinfo* yPtr = &yAbs;
             Device.EnableCustomCode(EventType.EV_ABS, EventCode.ABS_Y, (IntPtr)yPtr);
 
+            var pressureAbs = new input_absinfo
+            {
+                maximum = (int)8191
+            };
+            input_absinfo* pressurePtr = &pressureAbs;
+            Device.EnableCustomCode(EventType.EV_ABS, EventCode.ABS_PRESSURE, (IntPtr)pressurePtr);
+
             Device.EnableTypeCodes(
                 EventType.EV_KEY,
                 EventCode.BTN_LEFT,
                 EventCode.BTN_MIDDLE,
                 EventCode.BTN_RIGHT,
                 EventCode.BTN_FORWARD,
-                EventCode.BTN_BACK);
+                EventCode.BTN_BACK,
+                EventCode.BTN_TOOL_PEN,
+                EventCode.BTN_TOUCH);
             if (!Device.Initialize())
                 Log.Write("Evdev", "Failed to initialize virtual pointer.", true);
         }
@@ -57,6 +67,33 @@ namespace TabletDriverLib.Interop.Cursor
             _last = pos;
             Device.Write(EventType.EV_ABS, EventCode.ABS_X, (int)pos.X);
             Device.Write(EventType.EV_ABS, EventCode.ABS_Y, (int)pos.Y);
+        }
+
+        public void SetPressure(uint _pressure)
+        {
+            var pressure = (int)_pressure;
+            if (pressure != 0)
+            {
+                Device.Write(EventType.EV_ABS, EventCode.ABS_PRESSURE, pressure);
+                if (!isPenTouch)
+                {
+                    isPenTouch = true;
+                    Device.Write(EventType.EV_KEY, EventCode.BTN_TOUCH, 1);
+                }
+            }
+            else if (isPenTouch)
+            {
+                isPenTouch = false;
+                Device.Write(EventType.EV_KEY, EventCode.BTN_TOUCH, 0);
+            }
+        }
+
+        public void SetActive(bool active)
+        {
+            Device.Write(EventType.EV_KEY, EventCode.BTN_TOOL_PEN, active ? 1 : 0);
+        }
+        
+        public void Update() {
             Device.Sync();
         }
 
@@ -83,11 +120,12 @@ namespace TabletDriverLib.Interop.Cursor
             switch (button)
             {
                 case MouseButton.Left:
-                    return  EventCode.BTN_LEFT;
+                    // return  EventCode.BTN_LEFT;
+                    return EventCode.BTN_TOUCH;
                 case MouseButton.Middle:
-                    return  EventCode.BTN_MIDDLE;
+                    return EventCode.BTN_MIDDLE;
                 case MouseButton.Right:
-                    return  EventCode.BTN_RIGHT;
+                    return EventCode.BTN_RIGHT;
                 case MouseButton.Forward:
                     return EventCode.BTN_FORWARD;
                 case MouseButton.Backward:

@@ -20,6 +20,8 @@ namespace TabletDriverLib.Output
         private Area _displayArea, _tabletArea;
         private TabletProperties _tabletProperties;
 
+        private bool isActive;
+
         public Area Output
         {
             set
@@ -134,6 +136,18 @@ namespace TabletDriverLib.Output
 
             // Setting cursor position
             CursorHandler.SetCursorPosition(pos);
+            CursorHandler.SetPressure(report.Pressure);
+            if (report.ReportID == 0 && isActive)
+            {
+                System.Console.WriteLine(isActive);
+                CursorHandler.SetActive(isActive = false);
+            }
+            else if (report.ReportID != 0 && !isActive)
+            {
+                System.Console.WriteLine(isActive);
+                CursorHandler.SetActive(isActive = true);
+            }
+            CursorHandler.Update();
         }
     }
 }

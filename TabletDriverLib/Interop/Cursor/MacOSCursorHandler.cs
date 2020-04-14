@@ -21,6 +21,9 @@ namespace TabletDriverLib.Interop.Cursor
         {
             CGWarpMouseCursorPosition(new CGPoint(pos.X, pos.Y));
         }
+        public void SetPressure(uint pressure) { }
+        public void SetActive(bool active) { }
+        public void Update() { }
 
         private void PostMouseEvent(CGEventType type, CGMouseButton cgButton)
         {
@@ -32,7 +35,7 @@ namespace TabletDriverLib.Interop.Cursor
             CFRelease(eventRef);
             CFRelease(mouseEventRef);
         }
- 
+
         public void MouseDown(MouseButton button)
         {
             CGEventType type;
@@ -63,7 +66,7 @@ namespace TabletDriverLib.Interop.Cursor
                     return;
             }
             PostMouseEvent(type, cgButton);
-            InputDictionary.UpdateState(button, true);    
+            InputDictionary.UpdateState(button, true);
         }
 
         public void MouseUp(MouseButton button)

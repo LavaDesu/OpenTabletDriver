@@ -28,6 +28,9 @@ namespace TabletDriverLib.Interop.Cursor
         {
             SetCursorPos((int)(pos.X - _offsetX), (int)(pos.Y - _offsetY));
         }
+        public void SetPressure(uint pressure) { }
+        public void SetActive(bool active) { }
+        public void Update() { }
 
         private void MouseEvent(MOUSEEVENTF arg, uint dwData = 0)
         {
